@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Data Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .chart-container {
+            width: 100%;
+            height: 400px;
+        }
+        .file-upload {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .file-upload:hover {
+            border-color: #4a90e2;
+            background-color: #f9fafb;
+        }
+        .upload-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background-color: #4a90e2;
+            color: white;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #e2e8f0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #4a90e2;
+            transition: width 0.3s ease;
+        }
+        .collapsible {
+            transition: all 0.3s ease;
+        }
+        .icon-button {
+            transition: all 0.3s ease;
+        }
+        .icon-button:hover {
+            transform: scale(1.1);
+        }
+        .table-container {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .table-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-container th, .table-container td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .table-container th {
+            background-color: #f9fafb;
+            font-weight: bold;
+        }
+        .table-container tr:hover {
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="flex min-h-screen">
+        <!-- Left Sidebar - Upload Section -->
+        <div id="leftSidebar" class="w-1/4 bg-white p-8 shadow-lg collapsible">
+            <button id="collapseSidebar" class="icon-button bg-blue-500 text-white px-4 py-2 rounded mb-4">
+                <i class="fas fa-bars"></i> <!-- Collapse Icon -->
+            </button>
+            <h2 class="text-xl font-bold mb-6">📂 Upload Production Report</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="file-upload upload-animation mb-4">
+                    <p class="text-gray-600">Drag and drop file here</p>
+                    <p class="text-gray-500 text-sm">Limit 200MB per file - PDF</p>
+                    <input type="file" name="file" accept=".pdf" class="hidden" id="fileInput">
+                    <button type="button" onclick="document.getElementById('fileInput').click()" class="bg-blue-500 text-white px-4 py-2 rounded mt-2">Browse files</button>
+                </div>
+                <!-- Progress Bar -->
+                <div id="progressBar" class="progress-bar hidden">
+                    <div id="progressBarFill" class="progress-bar-fill" style="width: 0%;"></div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right Section - Data Tabs and Visualizations -->
+        <div class="flex-1 p-8">
+            <h1 class="text-3xl font-bold mb-8">📊 Production Data Analyzer</h1>
+
+            <!-- Results Section -->
+            <div id="results" class="hidden">
+                <!-- Production Totals -->
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-xl font-bold mb-4">🏭 Lantabur Production</h2>
+                        <p id="lantaburTotal" class="text-2xl font-semibold"></p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-xl font-bold mb-4">🏭 Taqwa Production</h2>
+                        <p id="taqwaTotal" class="text-2xl font-semibold"></p>
+                    </div>
+                </div>
+
+                <!-- Tabs for Lantabur and Taqwa Data -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex space-x-4 mb-4">
+                        <button id="lantaburTab" class="tab-button active bg-blue-100 text-blue-800 px-4 py-2 rounded" onclick="switchTab('lantabur')">📍 Lantabur Data</button>
+                        <button id="taqwaTab" class="tab-button bg-green-100 text-green-800 px-4 py-2 rounded" onclick="switchTab('taqwa')">📍 Taqwa Data</button>
+                    </div>
+
+                    <!-- Lantabur Data -->
+                    <div id="lantaburContent" class="tab-content">
+                        <h2 class="text-xl font-bold mb-4">📊 Lantabur Production Breakdown</h2>
+                        <div class="chart-container" id="lantaburChart"></div>
+                        <div class="flex space-x-4 mt-4">
+                            <button id="toggleLantaburTable" class="icon-button bg-blue-500 text-white px-4 py-2 rounded">
+                                <i class="fas fa-table"></i> <!-- Table Icon -->
+                            </button>
+                            <button id="copyLantaburData" class="icon-button bg-blue-500 text-white px-4 py-2 rounded">
+                                <i class="fas fa-copy"></i> <!-- Copy Icon -->
+                            </button>
+                        </div>
+                        <div id="lantaburTable" class="mt-4 table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Color</th>
+                                        <th>Quantity</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Taqwa Data -->
+                    <div id="taqwaContent" class="tab-content hidden">
+                        <h2 class="text-xl font-bold mb-4">📊 Taqwa Production Breakdown</h2>
+                        <div class="chart-container" id="taqwaChart"></div>
+                        <div class="flex space-x-4 mt-4">
+                            <button id="toggleTaqwaTable" class="icon-button bg-green-500 text-white px-4 py-2 rounded">
+                                <i class="fas fa-table"></i> <!-- Table Icon -->
+                            </button>
+                            <button id="copyTaqwaData" class="icon-button bg-green-500 text-white px-4 py-2 rounded">
+                                <i class="fas fa-copy"></i> <!-- Copy Icon -->
+                            </button>
+                        </div>
+                        <div id="taqwaTable" class="mt-4 table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Color</th>
+                                        <th>Quantity</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Handle file selection and automatic analysis
+        document.getElementById("fileInput").addEventListener("change", async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                // Show progress bar
+                document.getElementById("progressBar").classList.remove("hidden");
+
+                // Simulate progress (you can replace this with actual upload/analysis progress)
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    document.getElementById("progressBarFill").style.width = `${progress}%`;
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        analyzeFile(file);
+                    }
+                }, 300);
+            }
+        });
+
+        // Analyze the file
+        async function analyzeFile(file) {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch("/", {
+                method: "POST",
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                alert(data.error);
+            } else {
+                document.getElementById("results").classList.remove("hidden");
+
+                // Update totals
+                document.getElementById("lantaburTotal").textContent = `${data.lantabur_total} kg`;
+                document.getElementById("taqwaTotal").textContent = `${data.taqwa_total} kg`;
+
+                // Render charts
+                Plotly.newPlot("lantaburChart", data.lantabur_chart.data, data.lantabur_chart.layout);
+                Plotly.newPlot("taqwaChart", data.taqwa_chart.data, data.taqwa_chart.layout);
+
+                // Render tables
+                const renderTable = (data, containerId) => {
+                    const tableBody = document.querySelector(`#${containerId} tbody`);
+                    tableBody.innerHTML = data.map(row => `
+                        <tr>
+                            <td>${row.Color}</td>
+                            <td>${row.Quantity} kg</td>
+                            <td>${row.Percentage.toFixed(2)}%</td>
+                        </tr>
+                    `).join("");
+                };
+
+                renderTable(data.lantabur_data, "lantaburTable");
+                renderTable(data.taqwa_data, "taqwaTable");
+
+                // Add clipboard functionality
+                document.getElementById("copyLantaburData").addEventListener("click", () => {
+                    copyToClipboard(data.lantabur_data, data.lantabur_total, "Lantabur");
+                });
+
+                document.getElementById("copyTaqwaData").addEventListener("click", () => {
+                    copyToClipboard(data.taqwa_data, data.taqwa_total, "Taqwa");
+                });
+            }
+        }
+
+        // Copy data to clipboard
+        function copyToClipboard(data, total, industry) {
+            const date = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+            let clipboardData = `Date: ${date}\n`;
+            clipboardData += `${industry} total production = ${total}kg\n`;
+            clipboardData += `╰─>${industry} Data:\nLoading cap:\n`;
+
+            data.forEach(row => {
+                clipboardData += `${row.Color}: ${row.Quantity}kg (${row.Percentage.toFixed(2)}%)\n`;
+            });
+
+            clipboardData += `\nLAB RFT: \nTotal this month: \nAvg/day:\n`;
+
+            navigator.clipboard.writeText(clipboardData).then(() => {
+                alert("Data copied to clipboard!");
+            });
+        }
+
+        // Switch between Lantabur and Taqwa tabs
+        function switchTab(tab) {
+            document.querySelectorAll(".tab-content").forEach(content => {
+                content.classList.add("hidden");
+            });
+            document.querySelectorAll(".tab-button").forEach(button => {
+                button.classList.remove("active", "bg-blue-100", "text-blue-800", "bg-green-100", "text-green-800");
+            });
+
+            document.getElementById(`${tab}Content`).classList.remove("hidden");
+            document.getElementById(`${tab}Tab`).classList.add("active");
+            if (tab === "lantabur") {
+                document.getElementById(`${tab}Tab`).classList.add("bg-blue-100", "text-blue-800");
+            } else {
+                document.getElementById(`${tab}Tab`).classList.add("bg-green-100", "text-green-800");
+            }
+        }
+
+        // Toggle table visibility
+        document.getElementById("toggleLantaburTable").addEventListener("click", () => {
+            const table = document.getElementById("lantaburTable");
+            table.classList.toggle("hidden");
+        });
+
+        document.getElementById("toggleTaqwaTable").addEventListener("click", () => {
+            const table = document.getElementById("taqwaTable");
+            table.classList.toggle("hidden");
+        });
+
+        // Collapse/expand left sidebar
+        document.getElementById("collapseSidebar").addEventListener("click", () => {
+            const sidebar = document.getElementById("leftSidebar");
+            sidebar.classList.toggle("w-1/4");
+            sidebar.classList.toggle("w-16");
+        });
+    </script>
+</body>
+</html>
