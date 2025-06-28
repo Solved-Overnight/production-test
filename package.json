@@ -1,0 +1,22 @@
+{
+  "name": "pdf-production-analyzer",
+  "version": "1.0.0",
+  "description": "Modern PDF Production Data Analyzer with enhanced UI and animations",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^3.11.174",
+    "chart.js": "^4.4.0",
+    "chartjs-adapter-date-fns": "^3.0.0",
+    "date-fns": "^2.30.0",
+    "lucide": "^0.294.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

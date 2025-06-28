@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Data Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./src/styles/main.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Theme Toggle -->
+        <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+            <span class="theme-icon">🌙</span>
+        </button>
+
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <div class="logo-icon">📊</div>
+                        <h1>Production Analyzer</h1>
+                    </div>
+                    <div class="header-actions">
+                        <button id="helpBtn" class="btn btn-ghost">
+                            <span class="icon">❓</span>
+                            Help
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="container">
+                <!-- Upload Section -->
+                <section class="upload-section" id="uploadSection">
+                    <div class="upload-card">
+                        <div class="upload-animation">
+                            <div class="upload-icon">📄</div>
+                        </div>
+                        <h2>Upload Production Report</h2>
+                        <p>Drag and drop your PDF file here or click to browse</p>
+                        
+                        <div class="file-drop-zone" id="fileDropZone">
+                            <input type="file" id="fileInput" accept=".pdf" hidden>
+                            <div class="drop-content">
+                                <div class="drop-icon">⬆️</div>
+                                <p>Drop PDF file here</p>
+                                <span>or</span>
+                                <button class="btn btn-primary" id="browseBtn">
+                                    Browse Files
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="upload-progress hidden" id="uploadProgress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <p class="progress-text" id="progressText">Processing...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Results Section -->
+                <section class="results-section hidden" id="resultsSection">
+                    <!-- Production Totals -->
+                    <div class="totals-grid">
+                        <div class="total-card lantabur-card">
+                            <div class="card-header">
+                                <div class="card-icon">🏭</div>
+                                <h3>Lantabur Production</h3>
+                            </div>
+                            <div class="card-value" id="lantaburTotal">0 kg</div>
+                            <div class="card-trend">
+                                <span class="trend-icon">📈</span>
+                                <span class="trend-text">Total Production</span>
+                            </div>
+                        </div>
+
+                        <div class="total-card taqwa-card">
+                            <div class="card-header">
+                                <div class="card-icon">🏭</div>
+                                <h3>Taqwa Production</h3>
+                            </div>
+                            <div class="card-value" id="taqwaTotal">0 kg</div>
+                            <div class="card-trend">
+                                <span class="trend-icon">📈</span>
+                                <span class="trend-text">Total Production</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Visualization -->
+                    <div class="visualization-container">
+                        <!-- Tab Navigation -->
+                        <div class="tab-navigation">
+                            <button class="tab-btn active" data-tab="lantabur" id="lantaburTab">
+                                <span class="tab-icon">📍</span>
+                                Lantabur Data
+                            </button>
+                            <button class="tab-btn" data-tab="taqwa" id="taqwaTab">
+                                <span class="tab-icon">📍</span>
+                                Taqwa Data
+                            </button>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content active" id="lantaburContent">
+                            <div class="content-header">
+                                <h3>Lantabur Production Breakdown</h3>
+                                <div class="content-actions">
+                                    <button class="btn btn-secondary" id="toggleLantaburTable">
+                                        <span class="icon">📋</span>
+                                        Toggle Table
+                                    </button>
+                                    <button class="btn btn-secondary" id="copyLantaburData">
+                                        <span class="icon">📋</span>
+                                        Copy Data
+                                    </button>
+                                    <button class="btn btn-secondary" id="downloadLantaburChart">
+                                        <span class="icon">💾</span>
+                                        Download Chart
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-container">
+                                <canvas id="lantaburChart"></canvas>
+                            </div>
+
+                            <div class="data-table hidden" id="lantaburTable">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Color</th>
+                                            <th>Quantity (kg)</th>
+                                            <th>Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="lantaburTableBody">
+                                        <!-- Data will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="tab-content" id="taqwaContent">
+                            <div class="content-header">
+                                <h3>Taqwa Production Breakdown</h3>
+                                <div class="content-actions">
+                                    <button class="btn btn-secondary" id="toggleTaqwaTable">
+                                        <span class="icon">📋</span>
+                                        Toggle Table
+                                    </button>
+                                    <button class="btn btn-secondary" id="copyTaqwaData">
+                                        <span class="icon">📋</span>
+                                        Copy Data
+                                    </button>
+                                    <button class="btn btn-secondary" id="downloadTaqwaChart">
+                                        <span class="icon">💾</span>
+                                        Download Chart
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-container">
+                                <canvas id="taqwaChart"></canvas>
+                            </div>
+
+                            <div class="data-table hidden" id="taqwaTable">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Color</th>
+                                            <th>Quantity (kg)</th>
+                                            <th>Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="taqwaTableBody">
+                                        <!-- Data will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Help Modal -->
+        <div class="modal hidden" id="helpModal">
+            <div class="modal-overlay" id="modalOverlay"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>How to Use</h3>
+                    <button class="modal-close" id="modalClose">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="help-section">
+                        <h4>📄 Upload PDF</h4>
+                        <p>Upload a PDF file containing production data with the following structure:</p>
+                        <ul>
+                            <li>Lantabur Prod. [total]: Total production for Lantabur</li>
+                            <li>Taqwa Prod. [total]: Total production for Taqwa</li>
+                            <li>Tables with production breakdowns by color and quantity</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <h4>📊 View Data</h4>
+                        <p>Switch between Lantabur and Taqwa tabs to view:</p>
+                        <ul>
+                            <li>Interactive pie charts</li>
+                            <li>Detailed data tables</li>
+                            <li>Production percentages</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <h4>💾 Export Options</h4>
+                        <p>Available export options:</p>
+                        <ul>
+                            <li>Copy formatted data to clipboard</li>
+                            <li>Download charts as images</li>
+                            <li>Toggle table visibility</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
