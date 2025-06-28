@@ -1,13 +1,9 @@
-import { PDFAnalyzer } from './utils/pdfAnalyzer.js';
-import { ChartManager } from './utils/chartManager.js';
 import { ThemeManager } from './utils/themeManager.js';
 import { ToastManager } from './utils/toastManager.js';
 import { ModalManager } from './utils/modalManager.js';
 
 class ProductionAnalyzerApp {
     constructor() {
-        this.pdfAnalyzer = new PDFAnalyzer();
-        this.chartManager = new ChartManager();
         this.themeManager = new ThemeManager();
         this.toastManager = new ToastManager();
         this.modalManager = new ModalManager();
@@ -148,37 +144,36 @@ class ProductionAnalyzerApp {
             console.log('File size:', file.size, 'bytes');
             console.log('File type:', file.type);
             
-            const data = await this.pdfAnalyzer.extractDataFromPDF(file);
+            // Create FormData and send to backend
+            const formData = new FormData();
+            formData.append('file', file);
             
-            if (data && data.lantaburTotal > 0 && data.taqwaTotal > 0) {
-                this.currentData = data;
-                this.displayResults(data);
-                
-                // Check if we got real data or sample data
-                if (data.lantaburTotal === 18353 && data.taqwaTotal === 22040) {
-                    this.toastManager.showToast('Could not extract data from PDF. Showing sample data for demonstration.', 'warning');
-                } else {
-                    this.toastManager.showToast('PDF data extracted successfully!', 'success');
-                }
-                
-                console.log('=== FINAL EXTRACTED DATA ===');
-                console.log('Lantabur Total:', data.lantaburTotal);
-                console.log('Taqwa Total:', data.taqwaTotal);
-                console.log('Lantabur Data:', data.lantaburData);
-                console.log('Taqwa Data:', data.taqwaData);
-            } else {
-                throw new Error('No valid data extracted');
+            const response = await fetch('/', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
             }
+            
+            this.currentData = data;
+            this.displayResults(data);
+            this.toastManager.showToast('PDF data extracted successfully!', 'success');
+            
+            console.log('=== FINAL EXTRACTED DATA ===');
+            console.log('Lantabur Total:', data.lantabur_total);
+            console.log('Taqwa Total:', data.taqwa_total);
+            console.log('Lantabur Data:', data.lantabur_data);
+            console.log('Taqwa Data:', data.taqwa_data);
+            
         } catch (error) {
             console.error('=== PDF ANALYSIS FAILED ===');
             console.error('Error details:', error);
             
-            this.toastManager.showToast('Error analyzing PDF. Showing sample data for demonstration.', 'error');
-            
-            // Show sample data as fallback
-            const sampleData = this.pdfAnalyzer.getSampleData();
-            this.currentData = sampleData;
-            this.displayResults(sampleData);
+            this.toastManager.showToast('Error analyzing PDF: ' + error.message, 'error');
         } finally {
             this.hideProgress();
         }
@@ -220,16 +215,21 @@ class ProductionAnalyzerApp {
         document.getElementById('resultsSection').classList.remove('hidden');
 
         // Update totals with animation
-        this.animateValue('lantaburTotal', 0, data.lantaburTotal, 1000, ' kg');
-        this.animateValue('taqwaTotal', 0, data.taqwaTotal, 1000, ' kg');
+        this.animateValue('lantaburTotal', 0, data.lantabur_total, 1000, ' kg');
+        this.animateValue('taqwaTotal', 0, data.taqwa_total, 1000, ' kg');
 
-        // Render charts
-        this.chartManager.renderPieChart('lantaburChart', data.lantaburData, 'Lantabur Production');
-        this.chartManager.renderPieChart('taqwaChart', data.taqwaData, 'Taqwa Production');
+        // Render charts using Plotly
+        if (data.lantabur_chart) {
+            Plotly.newPlot('lantaburChart', data.lantabur_chart.data, data.lantabur_chart.layout, {responsive: true});
+        }
+        
+        if (data.taqwa_chart) {
+            Plotly.newPlot('taqwaChart', data.taqwa_chart.data, data.taqwa_chart.layout, {responsive: true});
+        }
 
         // Render tables
-        this.renderTable('lantaburTableBody', data.lantaburData);
-        this.renderTable('taqwaTableBody', data.taqwaData);
+        this.renderTable('lantaburTableBody', data.lantabur_data);
+        this.renderTable('taqwaTableBody', data.taqwa_data);
     }
 
     animateValue(elementId, start, end, duration, suffix = '') {
@@ -281,8 +281,8 @@ class ProductionAnalyzerApp {
     copyDataToClipboard(industry) {
         if (!this.currentData) return;
 
-        const data = industry === 'lantabur' ? this.currentData.lantaburData : this.currentData.taqwaData;
-        const total = industry === 'lantabur' ? this.currentData.lantaburTotal : this.currentData.taqwaTotal;
+        const data = industry === 'lantabur' ? this.currentData.lantabur_data : this.currentData.taqwa_data;
+        const total = industry === 'lantabur' ? this.currentData.lantabur_total : this.currentData.taqwa_total;
         
         const date = new Date().toLocaleDateString('en-GB', { 
             day: '2-digit', 
@@ -308,13 +308,19 @@ class ProductionAnalyzerApp {
     }
 
     downloadChart(chartId, filename) {
-        const canvas = document.getElementById(chartId);
-        if (canvas) {
-            const link = document.createElement('a');
-            link.download = filename;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            this.toastManager.showToast('Chart downloaded successfully!', 'success');
+        const chartElement = document.getElementById(chartId);
+        if (chartElement) {
+            Plotly.toImage(chartElement, {format: 'png', width: 800, height: 600})
+                .then((dataUrl) => {
+                    const link = document.createElement('a');
+                    link.download = filename;
+                    link.href = dataUrl;
+                    link.click();
+                    this.toastManager.showToast('Chart downloaded successfully!', 'success');
+                })
+                .catch(() => {
+                    this.toastManager.showToast('Failed to download chart', 'error');
+                });
         }
     }
 }
