@@ -140,33 +140,45 @@ class ProductionAnalyzerApp {
         }
 
         this.showProgress();
-        this.toastManager.showToast('Analyzing PDF file...', 'info');
+        this.toastManager.showToast('Analyzing PDF file... This may take a moment.', 'info');
         
         try {
-            console.log('Starting PDF analysis for file:', file.name);
+            console.log('=== STARTING PDF ANALYSIS ===');
+            console.log('File name:', file.name);
+            console.log('File size:', file.size, 'bytes');
+            console.log('File type:', file.type);
+            
             const data = await this.pdfAnalyzer.extractDataFromPDF(file);
             
-            if (data && data.lantaburTotal && data.taqwaTotal) {
+            if (data && data.lantaburTotal > 0 && data.taqwaTotal > 0) {
                 this.currentData = data;
                 this.displayResults(data);
-                this.toastManager.showToast('PDF analyzed successfully!', 'success');
-                console.log('Extracted data:', data);
+                
+                // Check if we got real data or sample data
+                if (data.lantaburTotal === 18353 && data.taqwaTotal === 22040) {
+                    this.toastManager.showToast('Could not extract data from PDF. Showing sample data for demonstration.', 'warning');
+                } else {
+                    this.toastManager.showToast('PDF data extracted successfully!', 'success');
+                }
+                
+                console.log('=== FINAL EXTRACTED DATA ===');
+                console.log('Lantabur Total:', data.lantaburTotal);
+                console.log('Taqwa Total:', data.taqwaTotal);
+                console.log('Lantabur Data:', data.lantaburData);
+                console.log('Taqwa Data:', data.taqwaData);
             } else {
-                this.toastManager.showToast('Could not extract production data from PDF. Using sample data for demonstration.', 'warning');
-                // Show sample data anyway for demonstration
-                const sampleData = this.pdfAnalyzer.getSampleData();
-                this.currentData = sampleData;
-                this.displayResults(sampleData);
+                throw new Error('No valid data extracted');
             }
         } catch (error) {
-            console.error('Error analyzing PDF:', error);
-            this.toastManager.showToast('Error analyzing PDF file. Please try a different file.', 'error');
+            console.error('=== PDF ANALYSIS FAILED ===');
+            console.error('Error details:', error);
+            
+            this.toastManager.showToast('Error analyzing PDF. Showing sample data for demonstration.', 'error');
             
             // Show sample data as fallback
             const sampleData = this.pdfAnalyzer.getSampleData();
             this.currentData = sampleData;
             this.displayResults(sampleData);
-            this.toastManager.showToast('Showing sample data for demonstration', 'info');
         } finally {
             this.hideProgress();
         }
@@ -177,7 +189,7 @@ class ProductionAnalyzerApp {
         
         let progress = 0;
         const interval = setInterval(() => {
-            progress += Math.random() * 15;
+            progress += Math.random() * 10;
             if (progress > 90) progress = 90;
             
             document.getElementById('progressFill').style.width = `${progress}%`;
@@ -185,7 +197,7 @@ class ProductionAnalyzerApp {
             if (progress >= 90) {
                 clearInterval(interval);
             }
-        }, 200);
+        }, 300);
 
         this.progressInterval = interval;
     }
