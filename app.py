@@ -1,4 +1,5 @@
 from flask import Flask, request, render_template, jsonify
+from flask_cors import CORS
 import pdfplumber
 import re
 import pandas as pd
@@ -7,9 +8,10 @@ import json
 from datetime import datetime
 
 app = Flask(__name__)
+CORS(app)
 
-def extract_data_from_pdf(pdf_path):
-    with pdfplumber.open(pdf_path) as pdf:
+def extract_data_from_pdf(pdf_file):
+    with pdfplumber.open(pdf_file.stream) as pdf:
         page = pdf.pages[0]
         text = page.extract_text()
 
