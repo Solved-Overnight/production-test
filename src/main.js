@@ -153,6 +153,21 @@ class ProductionAnalyzerApp {
                 body: formData
             });
             
+            // Check if response is ok
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server response not ok:', response.status, errorText);
+                throw new Error(`Server error: ${response.status} - ${errorText}`);
+            }
+            
+            // Check content type
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const responseText = await response.text();
+                console.error('Response is not JSON:', contentType, responseText);
+                throw new Error('Server returned invalid response format');
+            }
+            
             const data = await response.json();
             
             if (data.error) {
