@@ -1,6 +1,0 @@
-flask
-pdfplumber
-pandas
-plotly
-Gunicorn
-flask-cors

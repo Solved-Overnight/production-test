@@ -1,22 +1,22 @@
 {
-  "name": "pdf-production-analyzer",
+  "name": "production-analyzer",
   "version": "1.0.0",
-  "description": "Modern PDF Production Data Analyzer with enhanced UI and animations",
-  "main": "index.html",
+  "description": "PDF Production Data Analyzer",
+  "main": "server.js",
+  "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"node server.js\" \"vite\"",
+    "start": "node server.js",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^3.11.174",
-    "chart.js": "^4.4.0",
-    "chartjs-adapter-date-fns": "^3.0.0",
-    "date-fns": "^2.30.0",
-    "lucide": "^0.294.0"
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "multer": "^1.4.5-lts.1",
+    "pdf-parse": "^1.1.1",
+    "vite": "^5.0.0",
+    "concurrently": "^8.2.2"
   },
-  "devDependencies": {
-    "vite": "^5.0.0"
-  }
+  "devDependencies": {}
 }

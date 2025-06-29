@@ -144,11 +144,11 @@ class ProductionAnalyzerApp {
             console.log('File size:', file.size, 'bytes');
             console.log('File type:', file.type);
             
-            // Create FormData and send to backend
+            // Create FormData and send to Node.js backend
             const formData = new FormData();
             formData.append('file', file);
             
-            const response = await fetch('http://127.0.0.1:5000/', {
+            const response = await fetch('/api/upload', {
                 method: 'POST',
                 body: formData
             });
